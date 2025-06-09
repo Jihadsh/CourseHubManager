@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+    <color name="buttoncolor">#2196F3</color>
+    <color name="primaryBlue">#2979FF</color>
+    <color name="textPrimary">#1C1C1E</color>
+    <color name="textSecondary">#8E8E93</color>
+    <color name="purple_500">#6A5AE0</color>
+    <color name="deleteRed">#D32F2F</color>
+    <color name="editGreen">#388E3C</color>
+    <color name="primary">#3F51B5</color>
+
+
+</resources>

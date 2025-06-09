@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:background="#FFFFFF"
+    android:padding="16dp"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <!-- الترحيب -->
+    <TextView
+        android:id="@+id/tvWelcome"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Hello، 👋"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:textColor="#1C1C1E" />
+
+    <!-- بطاقتان: عدد الطلاب والكورسات -->
+    <LinearLayout
+        android:id="@+id/summaryCards"
+        android:layout_below="@id/tvWelcome"
+        android:layout_marginTop="16dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:weightSum="2"
+        android:gravity="center">
+
+        <!-- عدد الطلاب -->
+        <LinearLayout
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:padding="16dp"
+            android:layout_marginEnd="8dp"
+            android:background="@drawable/bg_card_lesson"
+            android:layout_width="0dp"
+            android:layout_height="100dp">
+
+            <TextView
+                android:text="Student"
+                android:textSize="16sp"
+                android:textColor="#444444"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+
+            <TextView
+                android:id="@+id/tvStudentCount"
+                android:text="120"
+                android:textSize="24sp"
+                android:textStyle="bold"
+                android:textColor="#6A5AE0"
+                android:layout_marginTop="8dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+        </LinearLayout>
+
+        <!-- عدد الكورسات -->
+        <LinearLayout
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:padding="16dp"
+            android:layout_marginStart="8dp"
+            android:background="@drawable/bg_card_lesson"
+            android:layout_width="0dp"
+            android:layout_height="100dp">
+
+            <TextView
+                android:text="Courses"
+                android:textSize="16sp"
+                android:textColor="#444444"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+
+            <TextView
+                android:id="@+id/tvCourseCount"
+                android:text="8"
+                android:textSize="24sp"
+                android:textStyle="bold"
+                android:textColor="#6A5AE0"
+                android:layout_marginTop="8dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <!-- عنوان الكورسات الأخيرة -->
+    <TextView
+        android:id="@+id/tvRecentCoursesLabel"
+        android:layout_below="@id/summaryCards"
+        android:layout_marginTop="24dp"
+        android:text=" Last Courses"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:textColor="#1C1C1E"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+
+    <!-- RecyclerView للكورسات -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvRecentCourses"
+        android:layout_below="@id/tvRecentCoursesLabel"
+        android:layout_marginTop="12dp"
+        android:layout_above="@+id/fabAddCourse"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_alignParentBottom="true"
+        android:layout_marginBottom="72dp" />
+
+    <!-- زر عائم لإضافة كورس -->
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fabAddCourse"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/ic_add"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentEnd="true"
+        android:layout_margin="24dp"
+        app:backgroundTint="@color/purple_500"
+        app:tint="@android:color/white" />
+</RelativeLayout>

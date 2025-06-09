@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">CourseHub Manager</string>
+    <string name="login">Login</string>
+    <string name="logout">Logout</string>
+    <string name="course_image"> Course Image </string>
+    <string name="select_course">Select Course</string>
+    <string name="bookmark">Bookmark</string>
+</resources>

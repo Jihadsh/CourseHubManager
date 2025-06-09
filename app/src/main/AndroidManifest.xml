@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <application
+        android:allowBackup="true"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:fullBackupContent="@xml/backup_rules"
+        android:icon="@drawable/ic_graduation_cap"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.Coursehubmanager"
+        tools:targetApi="31">
+
+        <!-- 1) شاشة تسجيل الدخول هي Launcher -->
+        <activity
+            android:name=".ui.auth.LoginActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <!-- 2) بعد تسجيل الدخول ننقل إلى MainActivity (Bottom Nav) -->
+        <activity
+            android:name=".ui.MainActivity"
+            android:exported="false" />
+
+        <!-- 3) شاشة إنشاء حساب -->
+        <activity
+            android:name=".ui.auth.RegisterActivity"
+            android:exported="false" />
+
+        <!-- 4) شاشة الـ Home (يمكن حذفها إذا تضمنت MainActivity الـ BottomNav) -->
+        <activity
+            android:name=".ui.home.HomeActivity"
+            android:exported="false" />
+
+        <!-- 5) تفاصيل الدورة -->
+        <activity
+            android:name=".ui.home.CourseDetailsActivity"
+            android:exported="false" />
+
+        <!-- 6) محتوى الدورة (قائمة الدروس) -->
+        <activity
+            android:name=".ui.home.CourseContentActivity"
+            android:exported="false" />
+
+        <!-- 7) تفاصيل الدرس مع رابط YouTube -->
+        <activity
+            android:name=".ui.home.LessonDetailActivity"
+            android:exported="false" />
+
+        <!-- 8) شاشة المفضّلة (Bookmarks) -->
+        <activity
+            android:name=".ui.home.BookmarkActivity"
+            android:exported="false" />
+
+        <!-- 9) لوحة الإدارة -->
+        <activity
+            android:name=".ui.admin.AdminDashboardActivity"
+            android:exported="false" />
+
+    </application>
+</manifest>
