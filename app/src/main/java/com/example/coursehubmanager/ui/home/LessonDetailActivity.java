@@ -26,7 +26,7 @@ public class LessonDetailActivity extends AppCompatActivity {
         link.setText("Watch on YouTube");
         link.setOnClickListener(v -> {
             Intent i = new Intent(Intent.ACTION_VIEW,
-                    Uri.parse(lesson.getYoutube_link()));
+                    Uri.parse(lesson.getYoutube_url()));
             startActivity(i);
         });
     }

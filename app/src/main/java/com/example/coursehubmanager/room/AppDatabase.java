@@ -29,7 +29,7 @@ import com.example.coursehubmanager.room.entities.UserLessonStatus;
                 Bookmark.class,
                 UserLessonStatus.class
         },
-        version = 5,
+        version = 7,
         exportSchema = false
 )
 public abstract class AppDatabase extends RoomDatabase {

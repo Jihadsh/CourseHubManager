@@ -1,6 +1,5 @@
 package com.example.coursehubmanager.ui.admin;
 
-import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -19,6 +18,10 @@ import java.util.List;
 
 public class AdminCourseAdapter extends RecyclerView.Adapter<AdminCourseAdapter.CourseViewHolder> {
 
+    public interface OnCourseClickListener {
+        void onCourseClick(Course course);
+    }
+
     public interface OnEditClickListener {
         void onEditClick(Course course);
     }
@@ -28,13 +31,16 @@ public class AdminCourseAdapter extends RecyclerView.Adapter<AdminCourseAdapter.
     }
 
     private List<Course> courseList;
+    private OnCourseClickListener courseClickListener;
     private OnEditClickListener editClickListener;
     private OnDeleteClickListener deleteClickListener;
 
     public AdminCourseAdapter(List<Course> courseList,
+                              OnCourseClickListener courseClickListener,
                               OnEditClickListener editClickListener,
                               OnDeleteClickListener deleteClickListener) {
         this.courseList = courseList;
+        this.courseClickListener = courseClickListener;
         this.editClickListener = editClickListener;
         this.deleteClickListener = deleteClickListener;
     }
@@ -70,6 +76,13 @@ public class AdminCourseAdapter extends RecyclerView.Adapter<AdminCourseAdapter.
         holder.btnDelete.setOnClickListener(v -> {
             if (deleteClickListener != null) {
                 deleteClickListener.onDeleteClick(course);
+            }
+        });
+
+        // ✅ حدث الضغط على الدورة نفسها
+        holder.itemView.setOnClickListener(v -> {
+            if (courseClickListener != null) {
+                courseClickListener.onCourseClick(course);
             }
         });
     }

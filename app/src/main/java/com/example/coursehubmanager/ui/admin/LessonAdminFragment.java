@@ -6,7 +6,6 @@ import android.text.InputType;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.LinearLayout;
@@ -29,34 +28,44 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 public class LessonAdminFragment extends Fragment {
+
     private Spinner spinnerCourses;
-    private RecyclerView rvLessons;
+    private RecyclerView rvAdminLessons;
     private FloatingActionButton fabAddLesson;
+
     private AppDatabase db;
     private List<Course> courseList;
-    private int selectedCourseId;
+    private int selectedCourseId = -1;
     private AdminLessonAdapter adapter;
 
     @Nullable
     @Override
-    public View onCreateView(@NonNull LayoutInflater inf,
-                             ViewGroup ct, Bundle bs) {
-        View v = inf.inflate(R.layout.fragment_admin_lessons, ct, false);
-        spinnerCourses = v.findViewById(R.id.spinnerCourses);
-        rvLessons      = v.findViewById(R.id.rvAdminLessons);
-        fabAddLesson   = v.findViewById(R.id.fabAddLesson);
-        db             = AppDatabase.getInstance(requireContext());
+    public View onCreateView(@NonNull LayoutInflater inflater,
+                             @Nullable ViewGroup container,
+                             @Nullable Bundle savedInstanceState) {
+        return inflater.inflate(R.layout.fragment_admin_lessons, container, false);
+    }
 
-        // 1) جلب كل الدورات من قاعدة البيانات
+    @Override
+    public void onViewCreated(@NonNull View v, @Nullable Bundle s) {
+        spinnerCourses   = v.findViewById(R.id.spinnerCourses);
+        rvAdminLessons   = v.findViewById(R.id.rvAdminLessons);
+        fabAddLesson     = v.findViewById(R.id.fabAddLesson);
+
+        db = AppDatabase.getInstance(requireContext());
+
+        setupSpinner();
+        setupRecycler();
+        fabAddLesson.setOnClickListener(x -> showAddLessonDialog());
+    }
+
+    private void setupSpinner() {
         courseList = db.courseDao().getAllCourses();
-
-        // 2) بناء قائمة عناوين الدورات يدوياً
         List<String> titles = new ArrayList<>();
         for (Course c : courseList) {
             titles.add(c.getTitle());
         }
 
-        // 3) تهيئة الـ Spinner بالعناوين
         ArrayAdapter<String> spAdapter = new ArrayAdapter<>(
                 requireContext(),
                 android.R.layout.simple_spinner_item,
@@ -65,70 +74,80 @@ public class LessonAdminFragment extends Fragment {
         spAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spinnerCourses.setAdapter(spAdapter);
 
-        // 4) عند اختيار عنصر من الـ Spinner، حمّل الدروس
-        spinnerCourses.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent,
-                                       View view, int pos, long id) {
+        spinnerCourses.setOnItemSelectedListener(new android.widget.AdapterView.OnItemSelectedListener() {
+            @Override public void onItemSelected(android.widget.AdapterView<?> parent,
+                                                 View view,
+                                                 int pos,
+                                                 long id) {
                 selectedCourseId = courseList.get(pos).getCourse_id();
                 loadLessons();
             }
-            @Override public void onNothingSelected(AdapterView<?> parent) {}
+            @Override public void onNothingSelected(android.widget.AdapterView<?> parent) { }
         });
+    }
 
-        // 5) إعداد RecyclerView مع الـ Adapter
-        rvLessons.setLayoutManager(new LinearLayoutManager(requireContext()));
-        adapter = new AdminLessonAdapter(
-                new ArrayList<>(),
-                this::showEditDialog,
-                this::confirmDelete
-        );
-        rvLessons.setAdapter(adapter);
-
-        // 6) زرّ إضافة درس جديد
-        fabAddLesson.setOnClickListener(x -> showAddDialog());
-
-        return v;
+    private void setupRecycler() {
+        rvAdminLessons.setLayoutManager(new LinearLayoutManager(requireContext()));
+        loadLessons();
     }
 
     private void loadLessons() {
-        List<Lesson> lessons = db.lessonDao().getByCourse(selectedCourseId);
-        adapter.setLessons(lessons);
+        List<Lesson> lessons = (selectedCourseId < 0)
+                ? new ArrayList<>()
+                : db.lessonDao().getByCourse(selectedCourseId);
+
+        if (adapter == null) {
+            adapter = new AdminLessonAdapter(
+                    lessons,
+                    this::showEditLessonDialog,
+                    this::confirmDeleteLesson
+            );
+            rvAdminLessons.setAdapter(adapter);
+        } else {
+            adapter.setLessons(lessons);
+        }
     }
 
-    private void showAddDialog() {
+    private void showAddLessonDialog() {
+        if (selectedCourseId < 0) {
+            Toast.makeText(requireContext(), "اختر كورس أولاً", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
         LinearLayout layout = new LinearLayout(requireContext());
         layout.setOrientation(LinearLayout.VERTICAL);
+        int pad = (int)(16 * getResources().getDisplayMetrics().density);
+        layout.setPadding(pad, pad, pad, pad);
 
-        EditText etTitle = makeField("Title");
-        EditText etDesc  = makeField("Description");
-        EditText etLink  = makeField("YouTube Link");
-        EditText etSeq   = makeField("Sequence Order");
-        etSeq.setInputType(InputType.TYPE_CLASS_NUMBER);
-        EditText etDur   = makeField("Duration (min)");
-        etDur.setInputType(InputType.TYPE_CLASS_NUMBER);
+        EditText etTitle    = makeField("Lesson Title");
+        EditText etDesc     = makeField("Description");
+        EditText etYoutube  = makeField("YouTube URL");
+        EditText etOrder    = makeField("Sequence Order");
+        etOrder.setInputType(InputType.TYPE_CLASS_NUMBER);
+        EditText etDuration = makeField("Duration (min)");
+        etDuration.setInputType(InputType.TYPE_CLASS_NUMBER);
 
         layout.addView(etTitle);
         layout.addView(etDesc);
-        layout.addView(etLink);
-        layout.addView(etSeq);
-        layout.addView(etDur);
+        layout.addView(etYoutube);
+        layout.addView(etOrder);
+        layout.addView(etDuration);
 
         new AlertDialog.Builder(requireContext())
                 .setTitle("Add Lesson")
                 .setView(layout)
                 .setPositiveButton("Add", (d,i) -> {
                     try {
-                        Lesson l = new Lesson(
+                        Lesson newLesson = new Lesson(
                                 etTitle.getText().toString().trim(),
                                 etDesc.getText().toString().trim(),
-                                etLink.getText().toString().trim(),
+                                etYoutube.getText().toString().trim(),
                                 selectedCourseId,
-                                Integer.parseInt(etSeq.getText().toString()),
-                                Integer.valueOf(etDur.getText().toString()),
+                                Integer.parseInt(etOrder.getText().toString().trim()),
+                                Integer.parseInt(etDuration.getText().toString().trim()),
                                 System.currentTimeMillis()
                         );
-                        db.lessonDao().insert(l);
+                        db.lessonDao().insert(newLesson);
                         Toast.makeText(requireContext(), "Lesson added", Toast.LENGTH_SHORT).show();
                         loadLessons();
                     } catch (Exception ex) {
@@ -139,29 +158,25 @@ public class LessonAdminFragment extends Fragment {
                 .show();
     }
 
-    private void showEditDialog(Lesson lesson) {
+    private void showEditLessonDialog(Lesson lesson) {
         LinearLayout layout = new LinearLayout(requireContext());
         layout.setOrientation(LinearLayout.VERTICAL);
+        int pad = (int)(16 * getResources().getDisplayMetrics().density);
+        layout.setPadding(pad, pad, pad, pad);
 
-        EditText etTitle = makeField("Title");
-        etTitle.setText(lesson.getTitle());
-        EditText etDesc  = makeField("Description");
-        etDesc.setText(lesson.getDescription());
-        EditText etLink  = makeField("YouTube Link");
-        etLink.setText(lesson.getYoutube_link());
-        EditText etSeq   = makeField("Sequence Order");
-        etSeq.setInputType(InputType.TYPE_CLASS_NUMBER);
-        etSeq.setText(String.valueOf(lesson.getSequence_order()));
-        EditText etDur   = makeField("Duration (min)");
-        etDur.setInputType(InputType.TYPE_CLASS_NUMBER);
-        etDur.setText(lesson.getDuration() != null ?
-                lesson.getDuration().toString() : "");
+        EditText etTitle    = makeField("Lesson Title");    etTitle.setText(lesson.getTitle());
+        EditText etDesc     = makeField("Description");     etDesc.setText(lesson.getDescription());
+        EditText etYoutube  = makeField("YouTube URL");     etYoutube.setText(lesson.getYoutube_url());
+        EditText etOrder    = makeField("Sequence Order");  etOrder.setText(String.valueOf(lesson.getSequence_order()));
+        etOrder.setInputType(InputType.TYPE_CLASS_NUMBER);
+        EditText etDuration = makeField("Duration (min)");  etDuration.setText(String.valueOf(lesson.getDuration()));
+        etDuration.setInputType(InputType.TYPE_CLASS_NUMBER);
 
         layout.addView(etTitle);
         layout.addView(etDesc);
-        layout.addView(etLink);
-        layout.addView(etSeq);
-        layout.addView(etDur);
+        layout.addView(etYoutube);
+        layout.addView(etOrder);
+        layout.addView(etDuration);
 
         new AlertDialog.Builder(requireContext())
                 .setTitle("Edit Lesson")
@@ -170,9 +185,9 @@ public class LessonAdminFragment extends Fragment {
                     try {
                         lesson.setTitle(etTitle.getText().toString().trim());
                         lesson.setDescription(etDesc.getText().toString().trim());
-                        lesson.setYoutube_link(etLink.getText().toString().trim());
-                        lesson.setSequence_order(Integer.parseInt(etSeq.getText().toString()));
-                        lesson.setDuration(Integer.valueOf(etDur.getText().toString()));
+                        lesson.setYoutube_url(etYoutube.getText().toString().trim());
+                        lesson.setSequence_order(Integer.parseInt(etOrder.getText().toString().trim()));
+                        lesson.setDuration(Integer.parseInt(etDuration.getText().toString().trim()));
                         db.lessonDao().update(lesson);
                         Toast.makeText(requireContext(), "Lesson updated", Toast.LENGTH_SHORT).show();
                         loadLessons();
@@ -184,13 +199,13 @@ public class LessonAdminFragment extends Fragment {
                 .show();
     }
 
-    private void confirmDelete(Lesson lesson) {
+    private void confirmDeleteLesson(Lesson lesson) {
         new AlertDialog.Builder(requireContext())
-                .setTitle("Confirm delete?")
+                .setTitle("Delete Lesson?")
                 .setMessage(lesson.getTitle())
                 .setPositiveButton("Delete", (d,i) -> {
                     db.lessonDao().delete(lesson);
-                    Toast.makeText(requireContext(), "Deleted", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(requireContext(), "Lesson deleted", Toast.LENGTH_SHORT).show();
                     loadLessons();
                 })
                 .setNegativeButton("Cancel", null)
@@ -200,6 +215,7 @@ public class LessonAdminFragment extends Fragment {
     private EditText makeField(String hint) {
         EditText e = new EditText(requireContext());
         e.setHint(hint);
+        e.setInputType(InputType.TYPE_CLASS_TEXT);
         return e;
     }
 }

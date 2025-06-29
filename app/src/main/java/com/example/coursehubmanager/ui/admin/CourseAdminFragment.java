@@ -1,6 +1,7 @@
 package com.example.coursehubmanager.ui.admin;
 
 import android.app.AlertDialog;
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -28,7 +29,8 @@ public class CourseAdminFragment extends Fragment {
     private AdminCourseAdapter adapter;
     private FloatingActionButton fabAddCourse;
 
-    @Nullable @Override
+    @Nullable
+    @Override
     public View onCreateView(@NonNull LayoutInflater inf,
                              ViewGroup ct, Bundle bs) {
         View v = inf.inflate(R.layout.fragment_admin_courses, ct, false);
@@ -36,17 +38,26 @@ public class CourseAdminFragment extends Fragment {
 
         rvCourses = v.findViewById(R.id.rvAdminCourses);
         rvCourses.setLayoutManager(new LinearLayoutManager(requireContext()));
+
         adapter = new AdminCourseAdapter(
-                db.courseDao().getAllCourses(),    // ← استخدمنا getAllCourses()
+                db.courseDao().getAllCourses(),
+                course -> openLessonAdmin(course.getCourse_id()),   // ✅ عند النقر على الدورة
                 this::showEditDialog,
                 this::confirmDelete
         );
+
         rvCourses.setAdapter(adapter);
 
         fabAddCourse = v.findViewById(R.id.fabAddCourse);
         fabAddCourse.setOnClickListener(x -> showAddDialog());
 
         return v;
+    }
+
+    private void openLessonAdmin(int courseId) {
+        Intent i = new Intent(requireContext(), AdminLessonActivity.class);
+        i.putExtra("course_id", courseId);
+        startActivity(i);
     }
 
     private void refresh() {
@@ -57,8 +68,8 @@ public class CourseAdminFragment extends Fragment {
         LinearLayout layout = new LinearLayout(requireContext());
         layout.setOrientation(LinearLayout.VERTICAL);
 
-        EditText etTitle      = makeField("Title");
-        EditText etDesc       = makeField("Description");
+        EditText etTitle = makeField("Title");
+        EditText etDesc = makeField("Description");
         EditText etInstructor = makeField("Instructor Name");
         layout.addView(etTitle);
         layout.addView(etDesc);
@@ -67,10 +78,10 @@ public class CourseAdminFragment extends Fragment {
         new AlertDialog.Builder(requireContext())
                 .setTitle("Add Course")
                 .setView(layout)
-                .setPositiveButton("Add", (d,i) -> {
+                .setPositiveButton("Add", (d, i) -> {
                     String title = etTitle.getText().toString().trim();
-                    String desc  = etDesc.getText().toString().trim();
-                    String inst  = etInstructor.getText().toString().trim();
+                    String desc = etDesc.getText().toString().trim();
+                    String inst = etInstructor.getText().toString().trim();
                     if (title.isEmpty() || desc.isEmpty() || inst.isEmpty()) {
                         Toast.makeText(requireContext(),
                                 "All fields are required", Toast.LENGTH_SHORT).show();
@@ -78,10 +89,7 @@ public class CourseAdminFragment extends Fragment {
                     }
                     Course c = new Course(
                             title, desc, inst,
-                            "", // placeholder image URL
-                            0.0, // price
-                            1,   // total hours
-                            1,   // default category
+                            "", 0.0, 1, 1,
                             System.currentTimeMillis()
                     );
                     db.courseDao().insert(c);
@@ -97,9 +105,9 @@ public class CourseAdminFragment extends Fragment {
         LinearLayout layout = new LinearLayout(requireContext());
         layout.setOrientation(LinearLayout.VERTICAL);
 
-        EditText etTitle      = makeField("Title");
+        EditText etTitle = makeField("Title");
         etTitle.setText(c.getTitle());
-        EditText etDesc       = makeField("Description");
+        EditText etDesc = makeField("Description");
         etDesc.setText(c.getDescription());
         EditText etInstructor = makeField("Instructor");
         etInstructor.setText(c.getInstructor_name());
@@ -111,7 +119,7 @@ public class CourseAdminFragment extends Fragment {
         new AlertDialog.Builder(requireContext())
                 .setTitle("Edit Course")
                 .setView(layout)
-                .setPositiveButton("Save", (d,i) -> {
+                .setPositiveButton("Save", (d, i) -> {
                     c.setTitle(etTitle.getText().toString().trim());
                     c.setDescription(etDesc.getText().toString().trim());
                     c.setInstructor_name(etInstructor.getText().toString().trim());
@@ -128,7 +136,7 @@ public class CourseAdminFragment extends Fragment {
         new AlertDialog.Builder(requireContext())
                 .setTitle("Delete course?")
                 .setMessage(c.getTitle())
-                .setPositiveButton("Delete", (d,i) -> {
+                .setPositiveButton("Delete", (d, i) -> {
                     db.courseDao().delete(c);
                     Toast.makeText(requireContext(),
                             "Course deleted", Toast.LENGTH_SHORT).show();

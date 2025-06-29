@@ -20,12 +20,11 @@ import com.example.coursehubmanager.room.AppDatabase;
 import com.example.coursehubmanager.room.entities.User;
 import com.example.coursehubmanager.ui.MainActivity;
 
+import java.security.MessageDigest;
+
 public class RegisterActivity extends AppCompatActivity {
 
-    private EditText etFullName;
-    private EditText etRegEmail;
-    private EditText etRegPassword;
-    private EditText etConfirmPassword;
+    private EditText etFullName, etRegEmail, etRegPassword, etConfirmPassword;
     private Button btnCreateAccount;
     private TextView tvGoToLogin;
 
@@ -48,7 +47,6 @@ public class RegisterActivity extends AppCompatActivity {
         db = AppDatabase.getInstance(this);
         prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
 
-        // إعداد زر إظهار/إخفاء كلمة المرور
         setupPasswordToggle(etRegPassword);
         setupPasswordToggle(etConfirmPassword);
 
@@ -82,14 +80,10 @@ public class RegisterActivity extends AppCompatActivity {
     }
 
     private void attemptRegister() {
-        String fullName = etFullName.getText() != null
-                ? etFullName.getText().toString().trim() : "";
-        String email    = etRegEmail.getText() != null
-                ? etRegEmail.getText().toString().trim() : "";
-        String password = etRegPassword.getText() != null
-                ? etRegPassword.getText().toString().trim() : "";
-        String confirm  = etConfirmPassword.getText() != null
-                ? etConfirmPassword.getText().toString().trim() : "";
+        String fullName = etFullName.getText() != null ? etFullName.getText().toString().trim() : "";
+        String email    = etRegEmail.getText() != null ? etRegEmail.getText().toString().trim() : "";
+        String password = etRegPassword.getText() != null ? etRegPassword.getText().toString().trim() : "";
+        String confirm  = etConfirmPassword.getText() != null ? etConfirmPassword.getText().toString().trim() : "";
 
         if (TextUtils.isEmpty(fullName)) {
             etFullName.setError("حقل الاسم الكامل مطلوب");
@@ -123,25 +117,49 @@ public class RegisterActivity extends AppCompatActivity {
         }
 
         long now = System.currentTimeMillis();
-        User newUser = new User(fullName, email, password, now);
+        String hashedPassword = hashPassword(password);
+
+        if (hashedPassword == null) {
+            Toast.makeText(this, "حدث خطأ أثناء التشفير.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        // إنشاء المستخدم
+        User newUser = new User(fullName, email, hashedPassword, now);
+        newUser.setIs_admin(false);  // ← تأكيد أنه مستخدم عادي
+        newUser.setUpdated_at(now); // ← لا تتركه null
+
         long id = db.userDao().insert(newUser);
         if (id > 0) {
-            // حفظ user_id
             SharedPreferences.Editor editor = prefs.edit();
             editor.putInt("user_id", (int) id);
             editor.apply();
 
-            Toast.makeText(this,
-                    "تم إنشاء الحساب بنجاح!", Toast.LENGTH_LONG).show();
-            // الانتقال إلى MainActivity
+            Toast.makeText(this, "تم إنشاء الحساب بنجاح!", Toast.LENGTH_LONG).show();
+
             Intent intent = new Intent(RegisterActivity.this, MainActivity.class);
             intent.putExtra("user_id", (int) id);
             startActivity(intent);
             finish();
         } else {
-            Toast.makeText(this,
-                    "فشل إنشاء الحساب. حاول مرة أخرى.",
-                    Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "فشل إنشاء الحساب. حاول مرة أخرى.", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private String hashPassword(String password) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] hash = digest.digest(password.getBytes("UTF-8"));
+            StringBuilder hexString = new StringBuilder();
+            for (byte b : hash) {
+                String hex = Integer.toHexString(0xff & b);
+                if(hex.length() == 1) hexString.append('0');
+                hexString.append(hex);
+            }
+            return hexString.toString();
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            return null;
         }
     }
 }

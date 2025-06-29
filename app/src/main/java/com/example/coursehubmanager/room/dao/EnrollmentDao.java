@@ -23,6 +23,9 @@ public interface EnrollmentDao {
     @Query("SELECT COUNT(*) FROM Enrollment WHERE user_id = :userId AND course_id = :courseId")
     int exists(int userId, int courseId);
 
+    @Query("UPDATE Enrollment SET status = 'completed' WHERE user_id = :uid AND course_id = :cid")
+    void markAsCompleted(int uid, int cid);
+
 
     @Query("UPDATE Enrollment " +
             "SET progress_percentage = :progress " +

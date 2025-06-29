@@ -20,8 +20,9 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.example.coursehubmanager.R;
 import com.example.coursehubmanager.room.AppDatabase;
 import com.example.coursehubmanager.room.entities.User;
-// استيراد MainActivity بدلاً من HomeActivity
 import com.example.coursehubmanager.ui.MainActivity;
+
+import java.security.MessageDigest;
 
 public class LoginActivity extends AppCompatActivity {
 
@@ -33,9 +34,9 @@ public class LoginActivity extends AppCompatActivity {
     private TextView tvForgotPassword;
 
     private SharedPreferences prefs;
-    private static final String PREFS_NAME   = "coursehub_prefs";
+    private static final String PREFS_NAME = "coursehub_prefs";
     private static final String KEY_REMEMBER = "remember_me";
-    private static final String KEY_EMAIL    = "saved_email";
+    private static final String KEY_EMAIL = "saved_email";
     private static final String KEY_PASSWORD = "saved_password";
 
     private AppDatabase db;
@@ -45,24 +46,22 @@ public class LoginActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
 
-        emailInput          = findViewById(R.id.emailInput);
-        passwordInput       = findViewById(R.id.passwordInput);
-        rememberMeCheckBox  = findViewById(R.id.rememberMeCheckBox);
-        loginButton         = findViewById(R.id.loginButton);
-        tvGoToRegister      = findViewById(R.id.tvGoToRegister);
-        tvForgotPassword    = findViewById(R.id.tvForgotPassword);
+        emailInput = findViewById(R.id.emailInput);
+        passwordInput = findViewById(R.id.passwordInput);
+        rememberMeCheckBox = findViewById(R.id.rememberMeCheckBox);
+        loginButton = findViewById(R.id.loginButton);
+        tvGoToRegister = findViewById(R.id.tvGoToRegister);
+        tvForgotPassword = findViewById(R.id.tvForgotPassword);
 
         prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
-        db    = AppDatabase.getInstance(this);
+        db = AppDatabase.getInstance(this);
 
-        // تحميل بيانات الاعتماد إذا كان Remember Me مفعَّل
         if (prefs.getBoolean(KEY_REMEMBER, false)) {
             emailInput.setText(prefs.getString(KEY_EMAIL, ""));
             passwordInput.setText(prefs.getString(KEY_PASSWORD, ""));
             rememberMeCheckBox.setChecked(true);
         }
 
-        // إظهار/إخفاء كلمة المرور بالضغط على الأيقونة
         passwordInput.setOnTouchListener((v, event) -> {
             final int DRAWABLE_END = 2;
             if (event.getAction() == MotionEvent.ACTION_UP) {
@@ -73,7 +72,6 @@ public class LoginActivity extends AppCompatActivity {
                     } else {
                         passwordInput.setTransformationMethod(PasswordTransformationMethod.getInstance());
                     }
-                    // ابقاء المؤشر في نهاية النص
                     passwordInput.setSelection(passwordInput.getText().length());
                     return true;
                 }
@@ -92,10 +90,8 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     private void attemptLogin() {
-        String email    = emailInput.getText()    != null
-                ? emailInput.getText().toString().trim() : "";
-        String password = passwordInput.getText() != null
-                ? passwordInput.getText().toString().trim() : "";
+        String email = emailInput.getText() != null ? emailInput.getText().toString().trim() : "";
+        String password = passwordInput.getText() != null ? passwordInput.getText().toString().trim() : "";
 
         if (TextUtils.isEmpty(email)) {
             emailInput.setError("حقل البريد مطلوب");
@@ -108,7 +104,9 @@ public class LoginActivity extends AppCompatActivity {
             return;
         }
 
-        User user = db.userDao().login(email, password);
+        String hashed = hashPassword(password);
+        User user = db.userDao().login(email, hashed);
+
         if (user == null) {
             Toast.makeText(this,
                     "خطأ: البريد أو كلمة المرور غير صحيحة",
@@ -116,7 +114,6 @@ public class LoginActivity extends AppCompatActivity {
             return;
         }
 
-        // حفظ أو مسح بيانات الاعتماد
         SharedPreferences.Editor editor = prefs.edit();
         if (rememberMeCheckBox.isChecked()) {
             editor.putBoolean(KEY_REMEMBER, true)
@@ -130,8 +127,6 @@ public class LoginActivity extends AppCompatActivity {
         editor.putInt("user_id", user.getUser_id());
         editor.apply();
 
-
-        // الانتقال إلى MainActivity (Bottom Navigation)
         Intent intent = new Intent(this, MainActivity.class);
         intent.putExtra("user_id", user.getUser_id());
         startActivity(intent);
@@ -160,5 +155,22 @@ public class LoginActivity extends AppCompatActivity {
                 })
                 .setNegativeButton("إلغاء", null)
                 .show();
+    }
+
+    // ✅ دالة التشفير SHA-256
+    private String hashPassword(String password) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            byte[] hash = digest.digest(password.getBytes("UTF-8"));
+            StringBuilder hexString = new StringBuilder();
+            for (byte b : hash) {
+                String hex = Integer.toHexString(0xff & b);
+                if (hex.length() == 1) hexString.append('0');
+                hexString.append(hex);
+            }
+            return hexString.toString();
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
+        }
     }
 }

@@ -81,9 +81,10 @@ public class AdminDashboardActivity extends AppCompatActivity {
                     rvRecentCourses.setLayoutManager(new LinearLayoutManager(this));
                     adapter = new AdminCourseAdapter(
                             recentCourses,
+                            course -> {},
                             this::showEditCourseDialog,
                             this::confirmDeleteCourse
-                    );
+                            );
                     rvRecentCourses.setAdapter(adapter);
                 } else {
                     adapter.setCourseList(recentCourses);
